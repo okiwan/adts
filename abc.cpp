@@ -6,14 +6,15 @@
 	#include <google/heap-profiler.h>
 #endif
 	
-#define NELEMENTSDEMO		5
+#define NELEMENTSDEMO		1000000
+#define NELEMENTSBASE		100000000
 
 template <class C, class I>
 
 class ABC {
 public:
 	
-	ABC(void) : arrel(NULL), numelements(0), altura(0) {}
+	ABC(void) : arrel(NULL), numelements(0), alturaarbre(0) {}
 	~ABC(void);
 	void inserir(C pclau, I pinfo);
 	void inordre(void);
@@ -22,6 +23,7 @@ public:
 	C maxim(void);
 	void esborrar(C pclau);
 	int elements(void);
+	int altura(void);
 	
 private:
 	
@@ -38,9 +40,9 @@ private:
 	Node *arrel;
 	Node *actual;
 	int numelements;
-	int altura;
+	int alturaarbre;
 	
-	void inserir(C pclau, I pinfo, Node **node);
+	void inserir(C pclau, I pinfo, Node **node, int paltura);
 	void inordre(Node **node);
 	I consultar(C pclau, Node **node);
 	C minim(Node **node);
@@ -55,7 +57,7 @@ template <class C, class I> ABC<C, I>::~ABC(void) {
 }
 
 template <class C, class I> void ABC<C, I>::inserir(C pclau, I pinfo) {
-	this->inserir(pclau, pinfo, &arrel);
+	this->inserir(pclau, pinfo, &arrel, 1);
 }
 
 template <class C, class I> void ABC<C, I>::inordre(void) {
@@ -82,13 +84,19 @@ template <class C, class I> void ABC<C, I>::esborrar(C pclau) {
 	esborrar(pclau, &arrel);	
 }
 
-template <class C, class I> void ABC<C, I>::inserir(C pclau, I pinfo, Node **node) {
+template <class C, class I> int ABC<C, I>::altura(void) {
+	return alturaarbre;
+}
+
+template <class C, class I> void ABC<C, I>::inserir(C pclau, I pinfo, Node **node, int paltura) {
 	if(*node == NULL) {
 		*node = new Node(pclau, pinfo);
 		numelements++;
+
+		if(alturaarbre<paltura) alturaarbre=paltura;
 	}
-	else if(pclau > (*node)->clau) inserir(pclau, pinfo, &(*node)->fdre);
-	else if(pclau < (*node)->clau) inserir(pclau, pinfo, &(*node)->fesq);
+	else if(pclau > (*node)->clau) inserir(pclau, pinfo, &(*node)->fdre, paltura+1);
+	else if(pclau < (*node)->clau) inserir(pclau, pinfo, &(*node)->fesq, paltura+1);
 	else {
 		(*node)->clau = pclau;
 		(*node)->info = pinfo;
@@ -169,12 +177,15 @@ int main(int argc, char **argv) {
 	cout << "> Creem un arbre, buit per defecte" << endl;
 	ABC<int, int> arbre;
 	
-	cout << "> Afegim un total de " << NELEMENTSDEMO << " element(s), cadascun un natural de l'1 al 100" << endl;
+	cout << "> Afegim un total de " << NELEMENTSDEMO << " element(s), cadascun un natural de l'1 al " << NELEMENTSBASE << endl;
 	for(int i=0; i<NELEMENTSDEMO; ++i) {
-		int tmp = (rand() % 100) + 1;
+		int tmp = (rand() % NELEMENTSBASE) + 1;
 		unnumero = tmp;
 		arbre.inserir(tmp, tmp);
 	}
+	
+	cout << "> Altura de l'arbre" << endl;
+	cout << arbre.altura() << endl;
 	
 	cout << "> Recorregut en inordre de l'arbre" << endl;
 	arbre.inordre();
@@ -192,16 +203,15 @@ int main(int argc, char **argv) {
 	cout << "> Mínim i màxim de l'arbre" << endl;
 	cout << "min = " << arbre.minim() << ", max = " << arbre.maxim() << endl;
 	
-	cout << "> Esborrat d'un element (" << unnumero << ") i recorregut en inordre" << endl;
-	arbre.esborrar(unnumero);
-	arbre.inordre();
-
 	cout << "> Buidat de l'arbre" << endl;
 	while(arbre.elements() > 0) {
 		cout << ">> Treiem el..." << arbre.minim() << endl;
 		arbre.esborrar(arbre.minim());
-		arbre.inordre();
 	}
+	cout << "> Recorregut en inordre de l'arbre després del buidat" << endl;
+	arbre.inordre();
+	
+	cout << "> Fi de la demostració" << endl;
 
 #ifdef PERFPROFILE
 	HeapProfilerDump("**Heap al final**");
